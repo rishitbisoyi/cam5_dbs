@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}CineBook | Server Error (500){% endblock %}
+
+{% block content %}
+<section style="padding: 6rem 0; text-align: center;">
+    <div class="container">
+        <div style="font-size: 5rem; line-height: 1; margin-bottom: 1rem; color: var(--accent-crimson);">500</div>
+        <h1 style="font-size: 2.2rem; margin-bottom: 1rem;">Projector Malfunction</h1>
+        <p style="max-width: 500px; margin: 0 auto 2rem; color: var(--text-secondary);">
+            A server-side exception occurred while processing your request. Any pending database transactions were rolled back safely.
+        </p>
+        {% if error %}
+        <div style="max-width: 600px; margin: 0 auto 2rem; padding: 1rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); font-family: monospace; font-size: 0.85rem; color: #fca5a5; text-align: left;">
+            {{ error }}
+        </div>
+        {% endif %}
+        <a href="{{ url_for('public.home') }}" class="btn btn-primary">
+            Return to Box Office
+        </a>
+    </div>
+</section>
+{% endblock %}

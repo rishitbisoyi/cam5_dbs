@@ -1,0 +1,105 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}CineBook Admin | Analytics & Reports{% endblock %}
+{% block page_title %}Cinema Analytics & Revenue Reports{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <p style="margin: 0; color: var(--text-secondary);">
+        Real-time financial analytics, concession demand, and theatre occupancy reports derived directly from MySQL aggregation.
+    </p>
+</div>
+
+<!-- KPI Cards -->
+<div class="stat-cards-grid">
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Total Recorded Revenue</h4>
+            <div class="stat-card-value highlight">{{ booking_rev | currency }}</div>
+        </div>
+        <div class="stat-card-icon amber">💰</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Ticket Sales Revenue</h4>
+            <div class="stat-card-value">{{ ticket_rev | currency }}</div>
+        </div>
+        <div class="stat-card-icon emerald">🎟️</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Concessions Revenue</h4>
+            <div class="stat-card-value">{{ snack_rev | currency }}</div>
+        </div>
+        <div class="stat-card-icon cyan">🍿</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Average Ticket Price</h4>
+            <div class="stat-card-value">{{ avg_ticket | currency }}</div>
+        </div>
+        <div class="stat-card-icon indigo">🏷️</div>
+    </div>
+</div>
+
+<!-- Visual Chart Grid (Chart.js) -->
+<div class="chart-grid">
+    <!-- Chart 1: Revenue Breakdown -->
+    <div class="chart-card">
+        <h3>
+            <span>Revenue Split (Tickets vs Snacks)</span>
+            <span class="badge badge-amber">Financial</span>
+        </h3>
+        <div class="chart-container">
+            <canvas id="chart-revenue-breakdown"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart 2: Bookings / Tickets by Movie -->
+    <div class="chart-card">
+        <h3>
+            <span>Tickets Sold by Movie Title</span>
+            <span class="badge badge-emerald">Volume</span>
+        </h3>
+        <div class="chart-container">
+            <canvas id="chart-movie-bookings"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart 3: Theatre Distribution -->
+    <div class="chart-card">
+        <h3>
+            <span>Bookings by Multiplex Theatre</span>
+            <span class="badge badge-cyan">Venues</span>
+        </h3>
+        <div class="chart-container">
+            <canvas id="chart-theatre-distribution"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart 4: Snack Item Demand -->
+    <div class="chart-card">
+        <h3>
+            <span>Concessions & Refreshments Sold</span>
+            <span class="badge badge-amber">Inventory</span>
+        </h3>
+        <div class="chart-container">
+            <canvas id="chart-snacks-sales"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart 5: Daily Revenue Trends (Spans 2 columns if space permits) -->
+    <div class="chart-card" style="grid-column: 1 / -1;">
+        <h3>
+            <span>Daily Booking Revenue Trend</span>
+            <span class="badge badge-indigo">Timeline</span>
+        </h3>
+        <div class="chart-container" style="height: 320px;">
+            <canvas id="chart-daily-trends"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}

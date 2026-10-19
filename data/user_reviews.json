@@ -1,0 +1,65 @@
+[
+  {
+    "review_id": 1,
+    "movie_id": 1,
+    "movie_name": "Leo",
+    "user_name": "Karthik V.",
+    "rating": 9,
+    "review_text": "Anirudh's background score and Vijay's cafe fight sequence were absolutely sensational! Watched at CineBook Screen 1 with Dolby Atmos.",
+    "created_at": "2026-10-15 19:30"
+  },
+  {
+    "review_id": 2,
+    "movie_id": 2,
+    "movie_name": "Jawan",
+    "user_name": "Rohit Malhotra",
+    "rating": 8,
+    "review_text": "Mass action spectacle at its best. SRK's dual role and the metro heist scene kept the audience cheering throughout.",
+    "created_at": "2026-10-16 21:15"
+  },
+  {
+    "review_id": 3,
+    "movie_id": 3,
+    "movie_name": "RRR",
+    "user_name": "Sita Ram",
+    "rating": 10,
+    "review_text": "Masterpiece of Indian cinema. The interval block and climax battle sequence redefined high-voltage action filmmaking.",
+    "created_at": "2026-10-17 18:00"
+  },
+  {
+    "review_id": 4,
+    "movie_id": 4,
+    "movie_name": "Interstellar",
+    "user_name": "Arun Kumar",
+    "rating": 10,
+    "review_text": "Hans Zimmer's organ score vibrating in the cinema auditorium gives me goosebumps every single time. A timeless sci-fi classic.",
+    "created_at": "2026-10-18 14:20"
+  },
+  {
+    "review_id": 5,
+    "movie_id": 5,
+    "movie_name": "Kantara",
+    "user_name": "Divya Menon",
+    "rating": 9,
+    "review_text": "The final 20 minutes of Bhoota Kola performance left everyone speechless. Incredible sound design and direction by Rishab.",
+    "created_at": "2026-10-18 16:45"
+  },
+  {
+    "review_id": 6,
+    "movie_id": 1,
+    "movie_name": "Leo",
+    "user_name": "Test Cinephile",
+    "rating": 9,
+    "review_text": "Exceptional cinematography and background score in Dolby Atmos!",
+    "created_at": "2026-10-18 23:14"
+  },
+  {
+    "review_id": 7,
+    "movie_id": 1,
+    "movie_name": "Leo",
+    "user_name": "Test Cinephile",
+    "rating": 9,
+    "review_text": "Exceptional cinematography and background score in Dolby Atmos!",
+    "created_at": "2026-10-18 23:16"
+  }
+]

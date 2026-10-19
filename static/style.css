@@ -1,0 +1,8 @@
+/* ==========================================================================
+   CineBook Main Stylesheet Bundle
+   ========================================================================== */
+
+@import url('css/base.css');
+@import url('css/components.css');
+@import url('css/cinema.css');
+@import url('css/admin.css');

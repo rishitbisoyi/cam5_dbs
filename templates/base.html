@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CineBook | Premium Cinema Booking & Management{% endblock %}</title>
+    <meta name="description" content="Experience movies like never before with CineBook. Real-time seat reservation, multiplex showtimes, and cinema concessions.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cinema.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- Hidden Flashed Messages for JS Toast Triggering -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message-data sr-only" data-category="{{ category }}" data-message="{{ message }}"></div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('public.home') }}" class="brand-logo" aria-label="CineBook Home">
+                <span class="logo-icon">🎬</span>
+                <span>Cine<span class="accent">Book</span></span>
+            </a>
+
+            <!-- IMDb-Style Global Quick Search Bar -->
+            <div class="nav-search-wrap">
+                <span class="nav-search-icon">🔍</span>
+                <input type="text" 
+                       id="header-quick-search" 
+                       class="nav-search-input" 
+                       placeholder="Search movies, languages..." 
+                       autocomplete="off"
+                       aria-label="Quick search movies">
+                <div id="quick-search-popover" class="quick-search-popover" role="listbox"></div>
+            </div>
+
+            <button type="button" class="nav-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+                ☰
+            </button>
+
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('public.home') }}" class="nav-link {% if request.endpoint == 'public.home' %}active{% endif %}">Home</a></li>
+                    <li><a href="{{ url_for('public.movies_catalogue') }}" class="nav-link {% if request.endpoint == 'public.movies_catalogue' and not request.args.get('watchlist') %}active{% endif %}">Movies</a></li>
+                    <li><a href="{{ url_for('public.theatres_discovery') }}" class="nav-link {% if request.endpoint == 'public.theatres_discovery' %}active{% endif %}">Theatres</a></li>
+                    <li><a href="{{ url_for('public.booking_flow') }}" class="nav-link {% if request.endpoint == 'public.booking_flow' %}active{% endif %}">Book Tickets</a></li>
+                    <li>
+                        <a href="{{ url_for('public.movies_catalogue', watchlist=1) }}" class="nav-link {% if request.args.get('watchlist') %}active{% endif %}" title="My Watchlist">
+                            <span>🔖 Watchlist</span>
+                            <span id="nav-watchlist-count" class="watchlist-badge-count" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li><a href="{{ url_for('public.my_bookings') }}" class="nav-link {% if request.endpoint == 'public.my_bookings' %}active{% endif %}">My Bookings</a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-actions">
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline btn-sm">
+                    <span>🛡️</span>
+                    <span>Admin Portal</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Main Content Block -->
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Cinematic Footer -->
+    <footer style="background: var(--bg-surface); border-top: 1px solid var(--border-subtle); margin-top: auto; padding: 3.5rem 0 2rem;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2.5rem; margin-bottom: 2.5rem;">
+                <div>
+                    <div class="brand-logo" style="margin-bottom: 1rem;">
+                        <span class="logo-icon">🎬</span>
+                        <span>Cine<span class="accent">Book</span></span>
+                    </div>
+                    <p style="font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary);">
+                        A premium cinema booking and theatre management platform engineered with Python, Flask, and MySQL 8. Combining BookMyShow-style frictionless ticketing with IMDb-inspired movie discovery.
+                    </p>
+                    <div style="display: flex; gap: 0.6rem; margin-top: 1rem;">
+                        <span class="badge badge-amber">Flask 3.1</span>
+                        <span class="badge badge-cyan">MySQL 8.0</span>
+                        <span class="badge badge-emerald">Live DB</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-primary);">Quick Navigation</h4>
+                    <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem;">
+                        <li><a href="{{ url_for('public.home') }}" style="color: var(--text-secondary);">Now Showing</a></li>
+                        <li><a href="{{ url_for('public.movies_catalogue') }}" style="color: var(--text-secondary);">Movie Catalogue</a></li>
+                        <li><a href="{{ url_for('public.theatres_discovery') }}" style="color: var(--text-secondary);">Multiplex Locations</a></li>
+                        <li><a href="{{ url_for('public.booking_flow') }}" style="color: var(--text-secondary);">Seat Reservation</a></li>
+                        <li><a href="{{ url_for('public.movies_catalogue', watchlist=1) }}" style="color: var(--text-secondary);">My Watchlist</a></li>
+                        <li><a href="{{ url_for('public.my_bookings') }}" style="color: var(--text-secondary);">Find My Tickets</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-primary);">Database Architecture</h4>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        Connected to <strong>CineBookDB</strong> utilizing all 11 normalized relational tables:
+                    </p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                        <code>THEATRE</code>, <code>SCREEN</code>, <code>MOVIE</code>, <code>SHOW</code>, <code>CUSTOMER</code>, <code>BOOKING</code>, <code>TICKET</code>, <code>PAYMENT</code>, <code>EMPLOYEE</code>, <code>SNACK</code>, <code>BOOKING_SNACK</code>
+                    </p>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-primary);">Administration</h4>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        Authorized staff portal for scheduling shows, managing screen capacity, employee assignments, and revenue analytics.
+                    </p>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+                        <span>🔒 Management Access</span>
+                    </a>
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+                <p style="margin: 0;">© 2026 CineBook Platform · All Rights Reserved.</p>
+                <p style="margin: 0;">Academic Database-Driven Web Application Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+    // Initialize watchlist count badge on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const res = await fetch('/api/watchlist');
+            if (res.ok) {
+                const data = await res.json();
+                const badge = document.getElementById('nav-watchlist-count');
+                if (badge && data.watchlist && data.watchlist.length > 0) {
+                    badge.textContent = data.watchlist.length;
+                    badge.style.display = 'inline-flex';
+                }
+            }
+        } catch(e) {}
+    });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

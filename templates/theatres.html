@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}CineBook | Theatres & Showtime Discovery{% endblock %}
+
+{% block content %}
+<section style="padding: 3rem 0 4rem;">
+    <div class="container">
+        <!-- Page Header -->
+        <div style="margin-bottom: 2rem;">
+            <span class="badge badge-cyan" style="margin-bottom: 0.5rem;">Discovery</span>
+            <h1 style="font-size: clamp(2rem, 3.5vw, 2.8rem); margin-bottom: 0.5rem;">Theatres & Showtimes</h1>
+            <p style="margin: 0; color: var(--text-secondary);">
+                Browse screening schedules across multiplexes by date, time slot, venue, or movie.
+            </p>
+        </div>
+
+        <!-- BookMyShow-Style Horizontal Date Selector Strip -->
+        <div style="margin-bottom: 1.5rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 0.6rem;">
+                Select Screening Date
+            </div>
+            <div class="date-strip">
+                <!-- All Dates Option -->
+                <a href="{{ url_for('public.theatres_discovery', theatre_id=selected_theatre or '', movie_id=selected_movie or '', time_slot=selected_slot or '') }}" 
+                   class="date-pill {% if not selected_date %}active{% endif %}" 
+                   style="min-width: 80px; justify-content: center;">
+                    <span class="pill-day">ALL</span>
+                    <span class="pill-date" style="font-size: 1.1rem; margin: 0.35rem 0;">DATES</span>
+                    <span class="pill-month">UPCOMING</span>
+                </a>
+
+                <!-- Specific Date Pills -->
+                {% for p in date_pills %}
+                <a href="{{ url_for('public.theatres_discovery', date=p.date_str, theatre_id=selected_theatre or '', movie_id=selected_movie or '', time_slot=selected_slot or '') }}" 
+                   class="date-pill {% if p.selected %}active{% endif %}">
+                    <span class="pill-day">{{ p.day_name }}</span>
+                    <span class="pill-date">{{ p.day_num }}</span>
+                    <span class="pill-month">{{ p.month_name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Time Slot Filter Chips (BookMyShow Style) -->
+        <div style="margin-bottom: 1.5rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 0.6rem;">
+                Filter by Time of Day
+            </div>
+            <div class="slot-pills-row">
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', theatre_id=selected_theatre or '', movie_id=selected_movie or '') }}" 
+                   class="slot-pill {% if not selected_slot %}active{% endif %}">
+                    All Showtimes
+                </a>
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', theatre_id=selected_theatre or '', movie_id=selected_movie or '', time_slot='Morning') }}" 
+                   class="slot-pill {% if selected_slot == 'Morning' %}active{% endif %}">
+                    🌅 Morning (&lt; 12 PM)
+                </a>
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', theatre_id=selected_theatre or '', movie_id=selected_movie or '', time_slot='Afternoon') }}" 
+                   class="slot-pill {% if selected_slot == 'Afternoon' %}active{% endif %}">
+                    ☀️ Afternoon (12 PM - 4 PM)
+                </a>
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', theatre_id=selected_theatre or '', movie_id=selected_movie or '', time_slot='Evening') }}" 
+                   class="slot-pill {% if selected_slot == 'Evening' %}active{% endif %}">
+                    🌆 Evening (4 PM - 8 PM)
+                </a>
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', theatre_id=selected_theatre or '', movie_id=selected_movie or '', time_slot='Night') }}" 
+                   class="slot-pill {% if selected_slot == 'Night' %}active{% endif %}">
+                    🌙 Night (&gt; 8 PM)
+                </a>
+            </div>
+        </div>
+
+        <!-- Secondary Filter Toolbar (Venue & Movie Selectors) -->
+        <form method="GET" action="{{ url_for('public.theatres_discovery') }}" class="filter-toolbar" style="margin-bottom: 2rem;">
+            <input type="hidden" name="date" value="{{ selected_date or '' }}">
+            <input type="hidden" name="time_slot" value="{{ selected_slot or '' }}">
+
+            <div class="filter-group" style="flex: 1;">
+                <!-- Theatre Filter -->
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Filter by Theatre</label>
+                    <select name="theatre_id" class="form-control" onchange="this.form.submit();">
+                        <option value="">All Multiplexes ({{ theatres|length }})</option>
+                        {% for t in theatres %}
+                        <option value="{{ t.Theatre_Id }}" {% if selected_theatre == t.Theatre_Id %}selected{% endif %}>
+                            {{ t.Theatre_Name }} ({{ t.Location }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Movie Filter -->
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Filter by Movie</label>
+                    <select name="movie_id" class="form-control" onchange="this.form.submit();">
+                        <option value="">All Now-Showing Movies ({{ movies|length }})</option>
+                        {% for m in movies %}
+                        <option value="{{ m.Movie_Id }}" {% if selected_movie == m.Movie_Id %}selected{% endif %}>
+                            {{ m.Movie_Name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="align-self: flex-end;">
+                    <a href="{{ url_for('public.theatres_discovery') }}" class="btn btn-secondary">
+                        Reset All Filters
+                    </a>
+                </div>
+            </div>
+
+            <div style="font-size: 0.9rem; color: var(--text-muted); align-self: flex-end;">
+                Showing <strong>{{ shows|length }}</strong> available showtime(s)
+            </div>
+        </form>
+
+        <!-- Active Filter Chips -->
+        {% if selected_theatre or selected_movie or selected_date or selected_slot %}
+        <div class="active-filter-chips">
+            <span style="font-size: 0.82rem; color: var(--text-muted);">Active filters:</span>
+            {% if selected_theatre %}
+            <span class="filter-chip-tag">
+                Venue Filtered
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', movie_id=selected_movie or '', time_slot=selected_slot or '') }}">×</a>
+            </span>
+            {% endif %}
+            {% if selected_movie %}
+            <span class="filter-chip-tag">
+                Movie Filtered
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', theatre_id=selected_theatre or '', time_slot=selected_slot or '') }}">×</a>
+            </span>
+            {% endif %}
+            {% if selected_date %}
+            <span class="filter-chip-tag">
+                Date: {{ selected_date }}
+                <a href="{{ url_for('public.theatres_discovery', theatre_id=selected_theatre or '', movie_id=selected_movie or '', time_slot=selected_slot or '') }}">×</a>
+            </span>
+            {% endif %}
+            {% if selected_slot %}
+            <span class="filter-chip-tag">
+                Slot: {{ selected_slot }}
+                <a href="{{ url_for('public.theatres_discovery', date=selected_date or '', theatre_id=selected_theatre or '', movie_id=selected_movie or '') }}">×</a>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Shows List -->
+        {% if shows %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for show in shows %}
+            <div class="card card-glass" style="padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; border-color: var(--border-medium); transition: border-color var(--transition-fast);">
+                <!-- Left: Movie & Language -->
+                <div style="min-width: 250px; flex: 2.5;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                        <a href="{{ url_for('public.movie_details', movie_id=show.Movie_Id) }}" style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); text-decoration: none;" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-primary)'">
+                            {{ show.Movie_Name }}
+                        </a>
+                        <span class="badge badge-amber">{{ show.Language }}</span>
+                        {% if show.time_slot %}
+                        <span class="badge badge-cyan" style="font-size: 0.72rem;">{{ show.time_slot }}</span>
+                        {% endif %}
+                    </div>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
+                        ⏱️ {{ show.Duration }} minutes runtime • Verified Digital Cinema
+                    </p>
+                </div>
+
+                <!-- Center: Theatre & Screen details -->
+                <div style="min-width: 230px; flex: 2;">
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem; margin-bottom: 0.25rem;">
+                        🏛️ {{ show.Theatre_Name }}
+                    </div>
+                    <div style="font-size: 0.88rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                        <span>📍 {{ show.Location }}</span>
+                        <span>•</span>
+                        <span>🖥️ Screen {{ show.Screen_No }}</span>
+                        <span>({{ show.Capacity }} seats)</span>
+                    </div>
+                </div>
+
+                <!-- Date & Time -->
+                <div style="min-width: 170px; flex: 1.5;">
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.2rem;">
+                        ⏰ {{ show.Show_Time | time_fmt }}
+                    </div>
+                    <div style="font-size: 0.88rem; color: var(--text-secondary);">
+                        📅 {{ show.Show_Date | date_fmt }}
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div>
+                    <a href="{{ url_for('public.booking_flow', show_id=show.Show_Id) }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <span>🎟️</span> Book Seats
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🏛️</div>
+            <h3>No Showtimes Match Selected Filters</h3>
+            <p>No screening schedules matched your selected criteria. Try selecting another date or reset your filters.</p>
+            <a href="{{ url_for('public.theatres_discovery') }}" class="btn btn-primary">Reset All Filters</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

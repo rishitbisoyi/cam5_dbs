@@ -1,0 +1,143 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}CineBook Admin | Screen Management{% endblock %}
+{% block page_title %}Screen Management (SCREEN Table){% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <p style="margin: 0; color: var(--text-secondary);">
+        Manage auditorium screens with composite primary key <code>(Theatre_Id, Screen_No)</code> and seat capacities.
+    </p>
+    <button type="button" class="btn btn-primary btn-sm" onclick="openModal('add-screen-modal');">
+        <span>+</span> Add Screen
+    </button>
+</div>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Theatre</th>
+                    <th>Screen No</th>
+                    <th>Auditorium Capacity</th>
+                    <th>Associated Shows</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in screens %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--text-primary);">{{ s.Theatre_Name }}</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">📍 {{ s.Location }} (ID: {{ s.Theatre_Id }})</div>
+                    </td>
+                    <td><span class="badge badge-amber">Screen {{ s.Screen_No }}</span></td>
+                    <td><strong>{{ s.Capacity }}</strong> seats</td>
+                    <td>
+                        {% if s.show_count > 0 %}
+                            <span class="badge badge-emerald">{{ s.show_count }} show(s) scheduled</span>
+                        {% else %}
+                            <span class="badge badge-cyan">0 shows</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button type="button" class="btn btn-secondary btn-sm"
+                                    onclick="editScreen({{ s.Theatre_Id }}, {{ s.Screen_No }}, {{ s.Capacity }}, '{{ s.Theatre_Name | escape }}');">
+                                Edit Capacity
+                            </button>
+                            <form method="POST" action="{{ url_for('admin.delete_screen', theatre_id=s.Theatre_Id, screen_no=s.Screen_No) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-sm btn-delete-confirm" data-entity="screen">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No screens configured in the SCREEN table.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Add Screen -->
+<div id="add-screen-modal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="card-header">
+            <h3 style="margin: 0; font-size: 1.2rem;">Add Screen to Theatre</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('add-screen-modal');">×</button>
+        </div>
+        <form method="POST" action="{{ url_for('admin.manage_screens') }}">
+            <input type="hidden" name="action" value="add">
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Select Theatre *</label>
+                    <select name="theatre_id" class="form-control" required>
+                        <option value="">-- Choose Theatre --</option>
+                        {% for t in theatres %}
+                        <option value="{{ t.Theatre_Id }}">{{ t.Theatre_Name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Screen Number (e.g. 1, 2, 3...) *</label>
+                    <input type="number" name="screen_no" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Total Seating Capacity *</label>
+                    <input type="number" name="capacity" class="form-control" placeholder="e.g. 150" min="10" required>
+                </div>
+            </div>
+            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-screen-modal');">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Screen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Screen Capacity -->
+<div id="edit-screen-modal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="card-header">
+            <h3 style="margin: 0; font-size: 1.2rem;">Edit Screen Capacity</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('edit-screen-modal');">×</button>
+        </div>
+        <form method="POST" action="{{ url_for('admin.manage_screens') }}">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" id="edit-screen-theatre-id" name="theatre_id">
+            <input type="hidden" id="edit-screen-no" name="screen_no">
+            <div class="card-body">
+                <div style="margin-bottom: 1rem; color: var(--text-secondary);">
+                    Updating <strong id="edit-screen-desc" style="color: var(--accent-primary);">-</strong>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Updated Seating Capacity *</label>
+                    <input type="number" id="edit-screen-capacity" name="capacity" class="form-control" min="10" required>
+                </div>
+            </div>
+            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('edit-screen-modal');">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Capacity</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editScreen(theatreId, screenNo, capacity, theatreName) {
+    document.getElementById('edit-screen-theatre-id').value = theatreId;
+    document.getElementById('edit-screen-no').value = screenNo;
+    document.getElementById('edit-screen-capacity').value = capacity;
+    document.getElementById('edit-screen-desc').textContent = `${theatreName} (Screen ${screenNo})`;
+    openModal('edit-screen-modal');
+}
+</script>
+{% endblock %}

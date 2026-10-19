@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}CineBook | Page Not Found (404){% endblock %}
+
+{% block content %}
+<section style="padding: 6rem 0; text-align: center;">
+    <div class="container">
+        <div style="font-size: 5rem; line-height: 1; margin-bottom: 1rem; color: var(--accent-primary);">404</div>
+        <h1 style="font-size: 2.2rem; margin-bottom: 1rem;">Scene Missing</h1>
+        <p style="max-width: 500px; margin: 0 auto 2rem; color: var(--text-secondary);">
+            The page or screening schedule you are looking for does not exist or may have been relocated.
+        </p>
+        <a href="{{ url_for('public.home') }}" class="btn btn-primary">
+            Return to Box Office
+        </a>
+    </div>
+</section>
+{% endblock %}

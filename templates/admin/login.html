@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}CineBook | Admin Sign In{% endblock %}
+
+{% block content %}
+<section style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem;">
+    <div class="card card-glass" style="width: 100%; max-width: 440px; padding: 2.5rem; border-color: var(--border-medium); box-shadow: var(--shadow-lg);">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 60px; height: 60px; margin: 0 auto 1rem; background: rgba(245, 158, 11, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid var(--border-accent);">
+                🛡️
+            </div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.35rem;">Staff Access</h1>
+            <p style="font-size: 0.9rem; margin: 0;">Sign in to access the CineBook management portal.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.login', next=request.args.get('next')) }}">
+            <div class="form-group">
+                <label for="admin-username" class="form-label">Admin Username</label>
+                <input type="text" 
+                       id="admin-username" 
+                       name="username" 
+                       class="form-control" 
+                       placeholder="e.g. admin" 
+                       required 
+                       autofocus>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+                <label for="admin-password" class="form-label">Password</label>
+                <input type="password" 
+                       id="admin-password" 
+                       name="password" 
+                       class="form-control" 
+                       placeholder="••••••••" 
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-bottom: 1.25rem;">
+                Sign In to Console →
+            </button>
+        </form>
+
+        <div style="padding: 0.85rem; background: var(--bg-surface-elevated); border-radius: var(--radius-md); font-size: 0.82rem; color: var(--text-muted); border: 1px solid var(--border-subtle); line-height: 1.5;">
+            💡 <strong>Academic Demo Default:</strong><br>
+            Username: <code>admin</code> • Password: <code>admin123</code><br>
+            Configured securely via <code>.env</code> with <code>scrypt</code> password hashing.
+        </div>
+    </div>
+</section>
+{% endblock %}

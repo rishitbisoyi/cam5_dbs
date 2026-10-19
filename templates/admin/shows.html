@@ -1,0 +1,232 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}CineBook Admin | Show Management{% endblock %}
+{% block page_title %}Show Schedule Management (SHOW Table){% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <p style="margin: 0; color: var(--text-secondary);">
+        Manage screening times in <code>`SHOW`</code> with composite foreign key referencing <code>SCREEN(Theatre_Id, Screen_No)</code>.
+    </p>
+    <button type="button" class="btn btn-primary btn-sm" onclick="openModal('add-show-modal');">
+        <span>+</span> Schedule New Show
+    </button>
+</div>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Show ID</th>
+                    <th>Movie Title</th>
+                    <th>Theatre & Screen</th>
+                    <th>Date</th>
+                    <th>Showtime</th>
+                    <th>Bookings</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in shows %}
+                <tr>
+                    <td><strong>#{{ s.Show_Id }}</strong></td>
+                    <td style="font-weight: 700; color: var(--text-primary);">{{ s.Movie_Name }}</td>
+                    <td>
+                        <div>{{ s.Theatre_Name }}</div>
+                        <small style="color: var(--text-muted);">Screen {{ s.Screen_No }} ({{ s.Capacity }} cap)</small>
+                    </td>
+                    <td><span class="badge badge-amber">{{ s.Show_Date | date_fmt }}</span></td>
+                    <td><span class="badge badge-cyan">{{ s.Show_Time | time_fmt }}</span></td>
+                    <td>
+                        {% if s.booking_count > 0 %}
+                            <span class="badge badge-emerald">{{ s.booking_count }} customer booking(s)</span>
+                        {% else %}
+                            <span class="badge badge-cyan">0 bookings</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button type="button" class="btn btn-secondary btn-sm"
+                                    onclick="editShow({{ s.Show_Id }}, {{ s.Theatre_Id }}, {{ s.Screen_No }}, {{ s.Movie_Id }}, '{{ s.Show_Date }}', '{{ s.Show_Time }}');">
+                                Edit
+                            </button>
+                            <form method="POST" action="{{ url_for('admin.delete_show', show_id=s.Show_Id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-sm btn-delete-confirm" data-entity="show">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No showtimes found in the SHOW table.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Add Show -->
+<div id="add-show-modal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="card-header">
+            <h3 style="margin: 0; font-size: 1.2rem;">Schedule New Showtime</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('add-show-modal');">×</button>
+        </div>
+        <form method="POST" action="{{ url_for('admin.manage_shows') }}">
+            <input type="hidden" name="action" value="add">
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Movie *</label>
+                    <select name="movie_id" class="form-control" required>
+                        <option value="">-- Choose Movie --</option>
+                        {% for m in movies %}
+                        <option value="{{ m.Movie_Id }}">{{ m.Movie_Name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Theatre *</label>
+                    <select id="add-show-theatre" name="theatre_id" class="form-control" onchange="updateScreenDropdown(this.value, 'add-show-screen');" required>
+                        <option value="">-- Choose Theatre --</option>
+                        {% for t in theatres %}
+                        <option value="{{ t.Theatre_Id }}">{{ t.Theatre_Name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Screen Number *</label>
+                    <select id="add-show-screen" name="screen_no" class="form-control" required>
+                        <option value="">-- Select Theatre First --</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Show Date *</label>
+                        <input type="date" name="show_date" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Show Time *</label>
+                        <input type="time" name="show_time" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-show-modal');">Cancel</button>
+                <button type="submit" class="btn btn-primary">Schedule Show</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Show -->
+<div id="edit-show-modal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="card-header">
+            <h3 style="margin: 0; font-size: 1.2rem;">Edit Showtime Schedule</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('edit-show-modal');">×</button>
+        </div>
+        <form method="POST" action="{{ url_for('admin.manage_shows') }}">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" id="edit-show-id" name="show_id">
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Movie *</label>
+                    <select id="edit-show-movie" name="movie_id" class="form-control" required>
+                        {% for m in movies %}
+                        <option value="{{ m.Movie_Id }}">{{ m.Movie_Name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Theatre *</label>
+                    <select id="edit-show-theatre" name="theatre_id" class="form-control" onchange="updateScreenDropdown(this.value, 'edit-show-screen');" required>
+                        {% for t in theatres %}
+                        <option value="{{ t.Theatre_Id }}">{{ t.Theatre_Name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Screen Number *</label>
+                    <select id="edit-show-screen" name="screen_no" class="form-control" required>
+                        <!-- Updated by JS -->
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Show Date *</label>
+                        <input type="date" id="edit-show-date" name="show_date" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Show Time *</label>
+                        <input type="time" id="edit-show-time" name="show_time" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('edit-show-modal');">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Show</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// JSON array of all screens from server
+const ALL_SCREENS = [
+    {% for sc in screens %}
+    { theatre_id: {{ sc.Theatre_Id }}, screen_no: {{ sc.Screen_No }}, capacity: {{ sc.Capacity }} }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+function updateScreenDropdown(theatreId, selectId, preselectedScreenNo = null) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.innerHTML = '';
+
+    const filtered = ALL_SCREENS.filter(s => s.theatre_id == theatreId);
+    if (filtered.length === 0) {
+        sel.innerHTML = '<option value="">No screens in this theatre</option>';
+        return;
+    }
+
+    filtered.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.screen_no;
+        opt.textContent = `Screen ${s.screen_no} (${s.capacity} seats)`;
+        if (preselectedScreenNo && s.screen_no == preselectedScreenNo) {
+            opt.selected = true;
+        }
+        sel.appendChild(opt);
+    });
+}
+
+function editShow(showId, theatreId, screenNo, movieId, showDate, showTime) {
+    document.getElementById('edit-show-id').value = showId;
+    document.getElementById('edit-show-movie').value = movieId;
+    document.getElementById('edit-show-theatre').value = theatreId;
+    updateScreenDropdown(theatreId, 'edit-show-screen', screenNo);
+    document.getElementById('edit-show-date').value = showDate;
+    
+    // Format time if timedelta string (e.g. 10:00:00 -> 10:00)
+    let cleanTime = showTime.trim();
+    if (cleanTime.length > 5) cleanTime = cleanTime.substring(0, 5);
+    document.getElementById('edit-show-time').value = cleanTime;
+
+    openModal('edit-show-modal');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}CineBook | Book Tickets — Streamlined Checkout{% endblock %}
+
+{% block content %}
+<section id="booking-flow-container" style="padding: 2rem 0 5rem;">
+    <div class="container">
+        <!-- Header & Hold Timer Bar -->
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+            <div>
+                <span class="badge badge-amber" style="margin-bottom: 0.35rem;">Live Booking Desk</span>
+                <h1 style="font-size: clamp(1.8rem, 3vw, 2.4rem); margin: 0;">Reserve Your Cinema Experience</h1>
+            </div>
+
+            <!-- 10-Minute Seat Hold Countdown Badge (BookMyShow UX) -->
+            <div class="booking-countdown-badge" id="booking-hold-timer" title="Your selected seats are temporarily reserved for 10 minutes">
+                <span style="font-size: 1.1rem;">⏱️</span>
+                <span>Seats Hold Window:</span>
+                <span class="countdown-timer-val" style="font-family: monospace; font-size: 1.05rem; letter-spacing: 0.05em;">10:00</span>
+            </div>
+        </div>
+
+        <!-- Stepper Navigation Indicator -->
+        <div class="stepper-nav" aria-label="Booking Progress" style="margin-bottom: 2.5rem;">
+            <div class="step-node active" data-step="1">
+                <div class="step-circle">1</div>
+                <span class="step-label">Show</span>
+            </div>
+            <div class="step-node" data-step="2">
+                <div class="step-circle">2</div>
+                <span class="step-label">Seats</span>
+            </div>
+            <div class="step-node" data-step="3">
+                <div class="step-circle">3</div>
+                <span class="step-label">Customer</span>
+            </div>
+            <div class="step-node" data-step="4">
+                <div class="step-circle">4</div>
+                <span class="step-label">Snacks</span>
+            </div>
+            <div class="step-node" data-step="5">
+                <div class="step-circle">5</div>
+                <span class="step-label">Payment</span>
+            </div>
+            <div class="step-node" data-step="6">
+                <div class="step-circle">6</div>
+                <span class="step-label">Review</span>
+            </div>
+        </div>
+
+        <!-- Desktop Two-Column Layout (Steps on Left, Persistent Summary on Right) -->
+        <div class="booking-layout-grid">
+            <!-- Left Column: Step Panels -->
+            <div class="booking-main-content">
+                <!-- ==================================================================
+                     STEP 1: Select Show
+                     ================================================================== -->
+                <div id="step-panel-1" class="booking-step-panel">
+                    <div class="card card-glass" style="padding: 2.25rem;">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <span class="badge badge-amber" style="margin-bottom: 0.5rem;">Step 1 of 6</span>
+                            <h2>Choose a Movie Showtime</h2>
+                            <p style="color: var(--text-secondary);">Select an available screening from our live database schedules.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="show-selector" class="form-label">Available Showtimes Across Multiplexes</label>
+                            <select id="show-selector" class="form-control" style="font-size: 1rem; padding: 0.85rem;">
+                                <option value="">-- Select a showtime --</option>
+                                {% for s in available_shows %}
+                                <option value="{{ s.Show_Id }}" {% if show_id == s.Show_Id %}selected{% endif %}>
+                                    {{ s.Movie_Name }} ({{ s.Language }}) • {{ s.Theatre_Name }} • {{ s.Show_Date | date_fmt }} at {{ s.Show_Time | time_fmt }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                            <button type="button" class="btn btn-primary btn-lg" data-goto-step="2">
+                                Select Seats →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================================================================
+                     STEP 2: Select Seats (Interactive SVG/CSS Layout)
+                     ================================================================== -->
+                <div id="step-panel-2" class="booking-step-panel" style="display: none;">
+                    <div class="seat-booking-stage">
+                        <!-- Show Metadata Banner -->
+                        <div style="text-align: center; margin-bottom: 2rem; width: 100%;">
+                            <span class="badge badge-amber" style="margin-bottom: 0.4rem;">Step 2 of 6</span>
+                            <h2 id="booking-movie-title" style="margin-bottom: 0.35rem; font-size: 1.85rem;">Loading Movie...</h2>
+                            <div id="booking-show-meta" style="color: var(--text-secondary); font-size: 0.95rem;">
+                                Loading venue details...
+                            </div>
+                        </div>
+
+                        <!-- Curved Cinema Screen -->
+                        <div class="screen-visual-wrap">
+                            <div class="screen-curve"></div>
+                            <div class="screen-label">🎬 ALL EYES THIS WAY (SCREEN)</div>
+                        </div>
+
+                        <!-- Interactive Seat Grid Container (generated dynamically by booking.js) -->
+                        <div id="seat-grid-container" class="seat-grid-container" role="grid" aria-label="Seat Selection Grid">
+                            <!-- Dynamic Rows and Seats rendered here -->
+                        </div>
+
+                        <!-- Tier Pricing & Seat Legend -->
+                        <div class="seat-legend" style="margin-top: 2rem;">
+                            <div class="legend-item">
+                                <div class="legend-swatch available"></div>
+                                <span>Available</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-swatch selected"></div>
+                                <span>Selected</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-swatch booked"></div>
+                                <span>Occupied / Booked</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted);">
+                            <span>🔵 <strong>Row A:</strong> Standard (₹120)</span>
+                            <span>•</span>
+                            <span>🟡 <strong>Rows B–C:</strong> Executive (₹150)</span>
+                            <span>•</span>
+                            <span>🟣 <strong>Rows D+:</strong> VIP Recliner (₹180)</span>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Seat Selection Summary & Action Bar -->
+                    <div class="card card-glass" style="padding: 1.25rem 1.75rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.5rem;">
+                        <div>
+                            <div style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Selected Seats (<span id="selected-seats-count">0</span>)</div>
+                            <div id="selected-seats-list" style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">None selected</div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                            <div>
+                                <div style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Ticket Subtotal</div>
+                                <div id="selected-seats-subtotal" style="font-size: 1.45rem; font-weight: 800; color: var(--accent-primary);">₹0.00</div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.75rem;">
+                                <button type="button" class="btn btn-secondary" data-goto-step="1">Back</button>
+                                <button type="button" id="btn-proceed-to-customer" class="btn btn-primary" data-goto-step="3" disabled>
+                                    Customer Info →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================================================================
+                     STEP 3: Customer Information
+                     ================================================================== -->
+                <div id="step-panel-3" class="booking-step-panel" style="display: none;">
+                    <div class="card card-glass" style="max-width: 620px; margin: 0 auto; padding: 2.25rem;">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <span class="badge badge-amber" style="margin-bottom: 0.5rem;">Step 3 of 6</span>
+                            <h2>Customer Details</h2>
+                            <p style="color: var(--text-secondary);">Enter contact details for your database booking voucher and ticket SMS.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customer-phone" class="form-label">Phone Number (10 digits) *</label>
+                            <input type="tel" id="customer-phone" class="form-control" placeholder="e.g. 9876543210" maxlength="10" required style="font-size: 1.05rem; letter-spacing: 0.05em;">
+                            <span class="form-hint">💡 Returning guest? Entering your 10-digit number automatically retrieves your name from our database records!</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customer-name" class="form-label">Full Name *</label>
+                            <input type="text" id="customer-name" class="form-control" placeholder="Enter guest full name" required style="font-size: 1.05rem;">
+                        </div>
+
+                        <div style="margin-top: 2.25rem; display: flex; justify-content: space-between;">
+                            <button type="button" class="btn btn-secondary" data-goto-step="2">← Back to Seats</button>
+                            <button type="button" class="btn btn-primary" data-goto-step="4">Snacks & Concessions →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================================================================
+                     STEP 4: Snacks & Concessions (BookMyShow UX)
+                     ================================================================== -->
+                <div id="step-panel-4" class="booking-step-panel" style="display: none;">
+                    <div class="card card-glass" style="padding: 2.25rem;">
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; gap: 1rem;">
+                            <div>
+                                <span class="badge badge-amber" style="margin-bottom: 0.5rem;">Step 4 of 6</span>
+                                <h2>Cinema Concessions & Refreshments</h2>
+                                <p style="margin: 0; color: var(--text-secondary);">Order ahead to pick up fresh snacks directly at the counter.</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Snacks Subtotal</div>
+                                <div id="snacks-subtotal" style="font-size: 1.45rem; font-weight: 800; color: var(--accent-cyan);">₹0.00</div>
+                            </div>
+                        </div>
+
+                        <!-- Concession Category Filter Pills -->
+                        <div class="snack-cat-pills-row">
+                            <button type="button" class="snack-cat-pill active" data-category="all">All Snacks</button>
+                            <button type="button" class="snack-cat-pill" data-category="popcorn">🍿 Popcorn</button>
+                            <button type="button" class="snack-cat-pill" data-category="beverage">🥤 Beverages</button>
+                            <button type="button" class="snack-cat-pill" data-category="combos">🍱 Combos & Sides</button>
+                        </div>
+
+                        <!-- Snacks Grid -->
+                        <div class="snack-grid">
+                            {% for snack in snacks %}
+                            {% set cat = 'popcorn' if ('Popcorn' in snack.Snack_Name) else ('beverage' if ('Coke' in snack.Snack_Name or 'Pepsi' in snack.Snack_Name or 'Water' in snack.Snack_Name or 'Drink' in snack.Snack_Name) else 'combos') %}
+                            <div class="snack-card" data-category="{{ cat }}">
+                                <div>
+                                    <div class="snack-icon">
+                                        {% if 'Popcorn' in snack.Snack_Name %}🍿
+                                        {% elif 'Coke' in snack.Snack_Name %}🥤
+                                        {% elif 'Nachos' in snack.Snack_Name %}🧀
+                                        {% elif 'Combo' in snack.Snack_Name %}🍱
+                                        {% elif 'Chocolate' in snack.Snack_Name %}🍫
+                                        {% else %}🍿{% endif %}
+                                    </div>
+                                    <div class="snack-name">{{ snack.Snack_Name }}</div>
+                                    <div class="snack-price">{{ snack.Price | currency }}</div>
+                                </div>
+
+                                <div class="qty-control">
+                                    <button type="button" class="qty-btn" onclick="BookingApp.changeSnackQty({{ snack.Snack_Id }}, -1, {{ snack.Price }}, '{{ snack.Snack_Name | escape }}')">-</button>
+                                    <span id="snack-qty-{{ snack.Snack_Id }}" class="qty-val">0</span>
+                                    <button type="button" class="qty-btn" onclick="BookingApp.changeSnackQty({{ snack.Snack_Id }}, 1, {{ snack.Price }}, '{{ snack.Snack_Name | escape }}')">+</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div style="margin-top: 2.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <button type="button" class="btn btn-secondary" data-goto-step="3">← Back to Customer</button>
+                            <div style="display: flex; gap: 0.75rem;">
+                                <button type="button" class="btn btn-outline" data-goto-step="5">Skip Snacks</button>
+                                <button type="button" class="btn btn-primary" data-goto-step="5">Proceed to Payment →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================================================================
+                     STEP 5: Demo Payment Simulation
+                     ================================================================== -->
+                <div id="step-panel-5" class="booking-step-panel" style="display: none;">
+                    <div class="card card-glass" style="max-width: 650px; margin: 0 auto; padding: 2.25rem;">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <span class="badge badge-amber" style="margin-bottom: 0.5rem;">Step 5 of 6</span>
+                            <h2>Simulated Payment</h2>
+                            <p style="color: var(--text-secondary);">Select a simulated payment method for academic demonstration.</p>
+                        </div>
+
+                        <div class="alert alert-info" style="font-size: 0.88rem; margin-bottom: 1.5rem;">
+                            <span>🛡️ <strong>Safe Academic Simulation:</strong> No real payment gateway or bank credentials are required. This inserts a verified record into MySQL <code>PAYMENT</code> with an automated Transaction ID.</span>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label">Payment Option</label>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                                <label style="border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 1rem; text-align: center; cursor: pointer; background: var(--bg-surface-elevated);">
+                                    <input type="radio" name="payment_mode" value="UPI" checked style="margin-bottom: 0.5rem;">
+                                    <div style="font-weight: 700;">📱 UPI</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">GPay, PhonePe, Paytm</div>
+                                </label>
+
+                                <label style="border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 1rem; text-align: center; cursor: pointer; background: var(--bg-surface-elevated);">
+                                    <input type="radio" name="payment_mode" value="Card" style="margin-bottom: 0.5rem;">
+                                    <div style="font-weight: 700;">💳 Card</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Debit / Credit Card</div>
+                                </label>
+
+                                <label style="border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 1rem; text-align: center; cursor: pointer; background: var(--bg-surface-elevated);">
+                                    <input type="radio" name="payment_mode" value="Cash" style="margin-bottom: 0.5rem;">
+                                    <div style="font-weight: 700;">💵 Cash</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Box Office Counter</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Tab Previews -->
+                        <div id="payment-tab-upi" class="payment-tab-content" style="padding: 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-medium); border-radius: var(--radius-md); text-align: center;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📲</div>
+                            <div style="font-weight: 700; color: var(--accent-primary); font-size: 1.1rem;">Instant UPI Simulation</div>
+                            <p style="font-size: 0.88rem; margin: 0.35rem 0 0; color: var(--text-secondary);">Demo Merchant VPA: <code>cinebook.tickets@demobank</code></p>
+                        </div>
+
+                        <div id="payment-tab-card" class="payment-tab-content" style="display: none; padding: 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-medium); border-radius: var(--radius-md); text-align: center;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💳</div>
+                            <div style="font-weight: 700; color: var(--accent-primary); font-size: 1.1rem;">Card Simulation Active</div>
+                            <p style="font-size: 0.88rem; margin: 0.35rem 0 0; color: var(--text-secondary);">Mock Card: •••• •••• •••• 4242 (Auto-approved)</p>
+                        </div>
+
+                        <div id="payment-tab-cash" class="payment-tab-content" style="display: none; padding: 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-medium); border-radius: var(--radius-md); text-align: center;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💵</div>
+                            <div style="font-weight: 700; color: var(--accent-primary); font-size: 1.1rem;">Box Office Counter Payment</div>
+                            <p style="font-size: 0.88rem; margin: 0.35rem 0 0; color: var(--text-secondary);">Pay in cash directly upon cinema arrival</p>
+                        </div>
+
+                        <div style="margin-top: 2.25rem; display: flex; justify-content: space-between;">
+                            <button type="button" class="btn btn-secondary" data-goto-step="4">← Back to Snacks</button>
+                            <button type="button" class="btn btn-primary" data-goto-step="6">Review Order →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================================================================
+                     STEP 6: Review & Final Confirmation
+                     ================================================================== -->
+                <div id="step-panel-6" class="booking-step-panel" style="display: none;">
+                    <div class="card card-glass" style="max-width: 680px; margin: 0 auto; padding: 2.25rem;">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <span class="badge badge-emerald" style="margin-bottom: 0.5rem;">Final Step 6</span>
+                            <h2>Review & Confirm Booking</h2>
+                            <p style="color: var(--text-secondary);">Verify your reservation details before committing to the database.</p>
+                        </div>
+
+                        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.75rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <span style="color: var(--text-muted);">Movie Title:</span>
+                                <strong id="review-movie" style="color: var(--text-primary);">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <span style="color: var(--text-muted);">Theatre & Screen:</span>
+                                <strong id="review-theatre" style="color: var(--text-primary);">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <span style="color: var(--text-muted);">Date & Showtime:</span>
+                                <strong id="review-datetime" style="color: var(--text-primary);">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <span style="color: var(--text-muted);">Reserved Seats:</span>
+                                <strong id="review-seats" style="color: var(--accent-primary);">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <span style="color: var(--text-muted);">Customer:</span>
+                                <strong id="review-customer" style="color: var(--text-primary);">-</strong>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px dashed var(--border-subtle); margin: 1.25rem 0;">
+
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.95rem;">
+                                <span>Tickets Subtotal:</span>
+                                <span id="review-ticket-subtotal" style="font-weight: 600;">₹0.00</span>
+                            </div>
+
+                            <div style="margin-bottom: 0.5rem; font-size: 0.95rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                    <span>Snacks & Concessions:</span>
+                                    <span id="review-snack-subtotal" style="font-weight: 600;">₹0.00</span>
+                                </div>
+                                <div id="review-snacks-list" style="padding-left: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+                                    <!-- Detailed snack list injected here -->
+                                </div>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid var(--border-medium); margin: 1.25rem 0;">
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.25rem;">
+                                <span style="font-weight: 700; color: var(--text-primary);">Total Amount Payable:</span>
+                                <span id="review-grand-total" style="font-weight: 800; color: var(--accent-primary); font-size: 1.6rem;">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button type="button" class="btn btn-secondary" data-goto-step="5">← Back</button>
+                            <button type="button" id="btn-confirm-booking" class="btn btn-primary btn-lg" style="box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);">
+                                🎟️ Confirm & Generate Ticket
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Persistent Order Summary Sidebar (BookMyShow UX) -->
+            <aside class="booking-sidebar-summary" aria-label="Persistent Order Summary">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">Order Summary</h3>
+                    <span class="badge badge-amber" style="font-size: 0.72rem;">Live Cart</span>
+                </div>
+
+                <!-- Movie & Venue Info -->
+                <div style="margin-bottom: 1.25rem;">
+                    <div id="side-summary-movie" style="font-weight: 800; font-size: 1.15rem; color: var(--text-primary); margin-bottom: 0.25rem;">
+                        Select Showtime
+                    </div>
+                    <div id="side-summary-theatre" style="font-size: 0.85rem; color: var(--accent-primary); margin-bottom: 0.2rem;">
+                        -
+                    </div>
+                    <div id="side-summary-datetime" style="font-size: 0.8rem; color: var(--text-muted);">
+                        -
+                    </div>
+                </div>
+
+                <!-- Seats breakdown -->
+                <div style="padding: 0.85rem; background: var(--bg-surface-elevated); border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.35rem;">
+                        <span style="color: var(--text-muted);">Seats:</span>
+                        <span id="side-summary-seats" style="font-weight: 700; color: var(--accent-primary);">None</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                        <span style="color: var(--text-muted);">Tickets:</span>
+                        <span id="side-summary-tickets-total" style="font-weight: 700; color: var(--text-primary);">₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- Snacks breakdown -->
+                <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.75rem; padding: 0 0.25rem;">
+                    <span style="color: var(--text-secondary);">Snacks & F&B:</span>
+                    <span id="side-summary-snacks-total" style="font-weight: 700; color: var(--accent-cyan);">₹0.00</span>
+                </div>
+
+                <!-- Total -->
+                <div style="padding-top: 0.85rem; border-top: 1px dashed var(--border-medium); display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">Grand Total:</span>
+                    <span id="side-summary-grand-total" style="font-size: 1.45rem; font-weight: 800; color: var(--accent-primary);">₹0.00</span>
+                </div>
+
+                <div style="margin-top: 1rem; font-size: 0.78rem; color: var(--text-muted); text-align: center;">
+                    🔒 Verified MySQL 8 ACID Transaction Guarantee
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+<!-- Mobile Sticky Bottom Summary Bar -->
+<div class="mobile-booking-bottom-bar" id="mobile-summary-bar">
+    <div>
+        <div id="mobile-summary-seats" style="font-size: 0.85rem; color: var(--text-secondary);">0 Seats Chosen</div>
+        <div id="mobile-summary-total" style="font-size: 1.25rem; font-weight: 800; color: var(--accent-primary);">₹0.00</div>
+    </div>
+    <button type="button" id="mobile-btn-continue" class="btn btn-primary" onclick="BookingApp.goToStep(Math.min(BookingApp.currentStep + 1, 6))" disabled>
+        Continue →
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

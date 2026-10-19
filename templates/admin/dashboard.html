@@ -1,0 +1,179 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}CineBook Admin | Dashboard Overview{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<!-- Live Database KPI Stat Cards -->
+<div class="stat-cards-grid">
+    <!-- Total Revenue -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Total Recorded Revenue</h4>
+            <div class="stat-card-value highlight">{{ metrics.total_revenue | currency }}</div>
+        </div>
+        <div class="stat-card-icon amber">💰</div>
+    </div>
+
+    <!-- Ticket Revenue -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Ticket Revenue</h4>
+            <div class="stat-card-value">{{ metrics.ticket_revenue | currency }}</div>
+        </div>
+        <div class="stat-card-icon emerald">🎟️</div>
+    </div>
+
+    <!-- Snack Revenue -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Concessions Revenue</h4>
+            <div class="stat-card-value">{{ metrics.snack_revenue | currency }}</div>
+        </div>
+        <div class="stat-card-icon cyan">🍿</div>
+    </div>
+
+    <!-- Average Booking -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Avg Booking Value</h4>
+            <div class="stat-card-value">{{ metrics.avg_booking | currency }}</div>
+        </div>
+        <div class="stat-card-icon indigo">📊</div>
+    </div>
+
+    <!-- Total Bookings -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Total Bookings</h4>
+            <div class="stat-card-value">{{ metrics.bookings }}</div>
+        </div>
+        <div class="stat-card-icon amber">🧾</div>
+    </div>
+
+    <!-- Total Customers -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Registered Customers</h4>
+            <div class="stat-card-value">{{ metrics.customers }}</div>
+        </div>
+        <div class="stat-card-icon cyan">👤</div>
+    </div>
+
+    <!-- Total Movies -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Active Movies</h4>
+            <div class="stat-card-value">{{ metrics.movies }}</div>
+        </div>
+        <div class="stat-card-icon emerald">🎬</div>
+    </div>
+
+    <!-- Total Theatres -->
+    <div class="stat-card">
+        <div class="stat-card-info">
+            <h4>Operating Theatres</h4>
+            <div class="stat-card-value">{{ metrics.theatres }}</div>
+        </div>
+        <div class="stat-card-icon indigo">🏛️</div>
+    </div>
+</div>
+
+<!-- Two-Column Layout: Recent Bookings & Popular Movies -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Recent Bookings Table -->
+    <div class="table-card">
+        <div class="card-header">
+            <h3 style="font-size: 1.15rem; margin: 0;">Recent Customer Bookings</h3>
+            <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline btn-sm">View All →</a>
+        </div>
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Ref</th>
+                        <th>Customer</th>
+                        <th>Movie</th>
+                        <th>Total</th>
+                        <th>Mode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in recent_bookings %}
+                    <tr>
+                        <td><strong>#{{ b.Booking_Id }}</strong></td>
+                        <td>
+                            <div style="font-weight: 600;">{{ b.Customer_Name }}</div>
+                            <small style="color: var(--text-muted);">{{ b.Phone }}</small>
+                        </td>
+                        <td>{{ b.Movie_Name }}</td>
+                        <td style="color: var(--accent-primary); font-weight: 700;">{{ b.Total_Amount | currency }}</td>
+                        <td><span class="badge badge-cyan">{{ b.Payment_Mode or 'UPI' }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent bookings recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Top Movies by Ticket Sales -->
+    <div class="table-card">
+        <div class="card-header">
+            <h3 style="font-size: 1.15rem; margin: 0;">Top Titles by Ticket Volume</h3>
+            <a href="{{ url_for('admin.manage_movies') }}" class="btn btn-outline btn-sm">Manage Movies →</a>
+        </div>
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Movie Title</th>
+                        <th>Language</th>
+                        <th>Tickets Sold</th>
+                        <th>Gross Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in top_movies %}
+                    <tr>
+                        <td><strong>{{ m.Movie_Name }}</strong></td>
+                        <td><span class="badge badge-amber">{{ m.Language }}</span></td>
+                        <td><strong style="color: var(--accent-emerald);">{{ m.tickets_sold }}</strong> tickets</td>
+                        <td style="color: var(--accent-primary); font-weight: 700;">{{ m.ticket_revenue | currency }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No movie ticket statistics yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Administration Actions -->
+<div class="card card-glass" style="padding: 1.5rem;">
+    <h3 style="font-size: 1.15rem; margin-bottom: 1rem;">Quick Database Actions</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-primary btn-sm">
+            <span>⏰</span> Schedule New Showtime
+        </a>
+        <a href="{{ url_for('admin.manage_movies') }}" class="btn btn-secondary btn-sm">
+            <span>🎬</span> Add New Movie
+        </a>
+        <a href="{{ url_for('admin.manage_screens') }}" class="btn btn-secondary btn-sm">
+            <span>🖥️</span> Configure Screens
+        </a>
+        <a href="{{ url_for('admin.manage_snacks') }}" class="btn btn-secondary btn-sm">
+            <span>🍿</span> Update Concession Prices
+        </a>
+        <a href="{{ url_for('admin.analytics') }}" class="btn btn-outline btn-sm">
+            <span>📈</span> Full Visual Analytics Reports
+        </a>
+    </div>
+</div>
+{% endblock %}

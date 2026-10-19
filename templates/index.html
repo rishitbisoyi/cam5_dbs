@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}CineBook | Premium Cinema Booking & Discovery{% endblock %}
+
+{% block content %}
+<!-- 1. Large Cinematic Hero Section with Spotlight Movie -->
+<section class="hero-section">
+    <div class="hero-backdrop" style="background-image: url('{{ spotlight.backdrop_url if spotlight else 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=80' }}');"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-tag">
+                <span>✨</span> The Ultimate Multiplex Experience
+            </div>
+            
+            {% if spotlight %}
+            <div style="display: flex; gap: 0.65rem; align-items: center; margin-bottom: 0.75rem;">
+                <span class="badge badge-amber">★ {{ spotlight.rating }} IMDb</span>
+                <span class="badge badge-cyan">{{ spotlight.Language }}</span>
+                <span class="badge badge-emerald">{{ spotlight.certificate }}</span>
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">⏱️ {{ spotlight.formatted_duration }}</span>
+            </div>
+            <h1 class="hero-title" style="margin-bottom: 0.85rem;">
+                {{ spotlight.Movie_Name }}: <span class="glow">{{ spotlight.tagline }}</span>
+            </h1>
+            <p class="hero-description">
+                {{ spotlight.synopsis }}
+            </p>
+
+            <div class="hero-actions">
+                <a href="{{ url_for('public.booking_flow') }}" class="btn btn-primary btn-lg">
+                    <span>🎟️</span> Book Tickets Now
+                </a>
+                <button type="button" class="btn btn-secondary btn-lg" onclick="playTrailer('{{ spotlight.trailer_url }}', '{{ spotlight.Movie_Name | escape }}');">
+                    <span>▶</span> Watch Official Trailer
+                </button>
+                <a href="{{ url_for('public.movie_details', movie_id=spotlight.Movie_Id) }}" class="btn btn-outline btn-lg">
+                    <span>ℹ️</span> Movie Details
+                </a>
+            </div>
+            {% else %}
+            <h1 class="hero-title">
+                Immerse Yourself in the <span class="glow">Magic of Cinema</span>
+            </h1>
+            <p class="hero-description">
+                Reserve your favorite seats with instant conflict-free booking, discover multiplex showtimes across cities, and pre-order gourmet snacks directly from our live database.
+            </p>
+            <div class="hero-actions">
+                <a href="{{ url_for('public.movies_catalogue') }}" class="btn btn-primary btn-lg">
+                    <span>🎬</span> Explore Movies
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Live Database-derived KPI counters -->
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <h4>{{ stats.movies_count }}</h4>
+                    <p>Movies Showing</p>
+                </div>
+                <div class="hero-stat-item">
+                    <h4>{{ stats.theatres_count }}</h4>
+                    <p>Partner Theatres</p>
+                </div>
+                <div class="hero-stat-item">
+                    <h4>{{ stats.shows_count }}+</h4>
+                    <p>Daily Showtimes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2. Featured Movies Section with Watchlist & Trailer Buttons -->
+<section style="padding: 4.5rem 0 3.5rem;">
+    <div class="container">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; gap: 1rem;">
+            <div>
+                <span class="badge badge-amber" style="margin-bottom: 0.5rem;">Now Showing</span>
+                <h2>Blockbusters on the Big Screen</h2>
+                <p style="margin: 0;">Verified releases running across our partner screens.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <a href="{{ url_for('public.movies_catalogue', watchlist=1) }}" class="btn btn-secondary btn-sm">
+                    🔖 View Watchlist
+                </a>
+                <a href="{{ url_for('public.movies_catalogue') }}" class="btn btn-outline btn-sm">
+                    View All Movies →
+                </a>
+            </div>
+        </div>
+
+        <div class="movie-grid">
+            {% for movie in movies %}
+            <article class="movie-card">
+                <div class="movie-poster-wrap">
+                    <img src="{{ movie.poster_url }}" 
+                         alt="{{ movie.Movie_Name }} Poster" 
+                         class="movie-poster-img"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='https://placehold.co/400x600/161c30/f59e0b?text={{ movie.Movie_Name | urlencode }}';">
+                    <div class="movie-poster-overlay">
+                        <span class="movie-rating-badge">★ {{ movie.rating }}</span>
+                    </div>
+
+                    <!-- Trailer Play Overlay on Poster -->
+                    <button type="button" 
+                            style="position: absolute; bottom: 12px; left: 12px; background: rgba(7, 9, 19, 0.85); border: 1px solid var(--border-medium); border-radius: var(--radius-full); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; transition: transform 0.2s;"
+                            onclick="playTrailer('{{ movie.trailer_url }}', '{{ movie.Movie_Name | escape }}');"
+                            title="Play Trailer">
+                        ▶
+                    </button>
+                </div>
+
+                <div class="movie-card-info">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.35rem;">
+                        <h3 class="movie-card-title" title="{{ movie.Movie_Name }}">
+                            <a href="{{ url_for('public.movie_details', movie_id=movie.Movie_Id) }}" style="color: inherit;">
+                                {{ movie.Movie_Name }}
+                            </a>
+                        </h3>
+                        <button type="button" 
+                                class="btn-watchlist {% if movie.Movie_Id in watchlist_ids %}in-watchlist{% endif %}" 
+                                data-movie-id="{{ movie.Movie_Id }}" 
+                                style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                title="Add to Watchlist">
+                            {% if movie.Movie_Id in watchlist_ids %}✓{% else %}+🔖{% endif %}
+                        </button>
+                    </div>
+
+                    <div class="movie-meta-row">
+                        <span class="badge badge-cyan">{{ movie.Language }}</span>
+                        <span class="movie-meta-item">⏱️ {{ movie.formatted_duration }}</span>
+                        <span class="movie-meta-item">🛡️ {{ movie.certificate }}</span>
+                    </div>
+                    <p class="movie-genre-text">{{ movie.genre }}</p>
+
+                    <div class="movie-card-actions">
+                        <a href="{{ url_for('public.movie_details', movie_id=movie.Movie_Id) }}" class="btn btn-secondary btn-sm" style="flex: 1;">
+                            Details
+                        </a>
+                        <a href="{{ url_for('public.movie_details', movie_id=movie.Movie_Id) }}" class="btn btn-primary btn-sm" style="flex: 1;">
+                            Book Shows
+                        </a>
+                    </div>
+                </div>
+            </article>
+            {% else %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">🎥</div>
+                <h3>No Movies Found</h3>
+                <p>There are currently no active movie titles in the database.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 3. Our Theatres & Multiplexes Section -->
+<section style="padding: 4rem 0; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+    <div class="container">
+        <div style="text-align: center; max-width: 650px; margin: 0 auto 3rem;">
+            <span class="badge badge-cyan" style="margin-bottom: 0.5rem;">Venues</span>
+            <h2>Our Partner Theatres</h2>
+            <p>State-of-the-art multiplexes equipped with 4K laser projection and Dolby Atmos sound.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            {% for theatre in theatres %}
+            <div class="card card-glass" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="card-body">
+                    <div style="font-size: 2.2rem; margin-bottom: 1rem;">🏛️</div>
+                    <h3 style="font-size: 1.35rem; margin-bottom: 0.35rem;">{{ theatre.Theatre_Name }}</h3>
+                    <p style="color: var(--accent-primary); font-weight: 600; font-size: 0.95rem; margin-bottom: 1rem;">
+                        📍 {{ theatre.Location }}
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: var(--text-secondary);">
+                        <span>🖥️ <strong>{{ theatre.screen_count }}</strong> Screens</span>
+                        <span>•</span>
+                        <span>Dolby Sound</span>
+                    </div>
+                </div>
+                <div class="card-footer" style="display: flex; justify-content: flex-end;">
+                    <a href="{{ url_for('public.theatres_discovery', theatre_id=theatre.Theatre_Id) }}" class="btn btn-outline btn-sm">
+                        View Showtimes →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 4. Upcoming Shows Schedule Preview -->
+<section style="padding: 4.5rem 0;">
+    <div class="container">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; gap: 1rem;">
+            <div>
+                <span class="badge badge-emerald" style="margin-bottom: 0.5rem;">Schedules</span>
+                <h2>Upcoming Showtimes</h2>
+                <p style="margin: 0;">Real-time scheduled screenings ready for instant booking.</p>
+            </div>
+            <a href="{{ url_for('public.theatres_discovery') }}" class="btn btn-secondary btn-sm">
+                All Showtimes →
+            </a>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem;">
+            {% for show in upcoming_shows %}
+            <div class="card" style="padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                <div>
+                    <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem; color: var(--text-primary);">{{ show.Movie_Name }}</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+                        🏛️ {{ show.Theatre_Name }} · Screen {{ show.Screen_No }}
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="badge badge-amber">{{ show.Show_Date | date_fmt }}</span>
+                        <span class="badge badge-cyan">{{ show.Show_Time | time_fmt }}</span>
+                    </div>
+                </div>
+                <div>
+                    <a href="{{ url_for('public.booking_flow', show_id=show.Show_Id) }}" class="btn btn-primary btn-sm">
+                        Book
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 5. How CineBook Works (Booking Experience Guide) -->
+<section style="padding: 4.5rem 0; background: var(--bg-surface); border-top: 1px solid var(--border-subtle);">
+    <div class="container">
+        <div style="text-align: center; max-width: 650px; margin: 0 auto 3.5rem;">
+            <span class="badge badge-amber" style="margin-bottom: 0.5rem;">Seamless Process</span>
+            <h2>How It Works</h2>
+            <p>From movie discovery to printing your entry pass in four effortless steps.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem;">
+            <div style="text-align: center; padding: 1.5rem;">
+                <div style="width: 60px; height: 60px; margin: 0 auto 1.25rem; background: rgba(245, 158, 11, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--accent-primary); border: 1px solid var(--border-accent);">
+                    1
+                </div>
+                <h4 style="margin-bottom: 0.5rem;">Select Showtime</h4>
+                <p style="font-size: 0.9rem;">Choose your preferred movie, multiplex theatre, and convenient screening time.</p>
+            </div>
+
+            <div style="text-align: center; padding: 1.5rem;">
+                <div style="width: 60px; height: 60px; margin: 0 auto 1.25rem; background: rgba(6, 182, 212, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.35);">
+                    2
+                </div>
+                <h4 style="margin-bottom: 0.5rem;">Pick Your Seats</h4>
+                <p style="font-size: 0.9rem;">Interactive visual seating map reflecting real-time database reservation status with 10-min hold timer.</p>
+            </div>
+
+            <div style="text-align: center; padding: 1.5rem;">
+                <div style="width: 60px; height: 60px; margin: 0 auto 1.25rem; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.35);">
+                    3
+                </div>
+                <h4 style="margin-bottom: 0.5rem;">Add Refreshments</h4>
+                <p style="font-size: 0.9rem;">Enhance your cinematic experience with popcorn, nachos, and cold beverages.</p>
+            </div>
+
+            <div style="text-align: center; padding: 1.5rem;">
+                <div style="width: 60px; height: 60px; margin: 0 auto 1.25rem; background: rgba(225, 29, 72, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fda4af; border: 1px solid rgba(225, 29, 72, 0.35);">
+                    4
+                </div>
+                <h4 style="margin-bottom: 0.5rem;">Instant Ticket Pass</h4>
+                <p style="font-size: 0.9rem;">Receive an instant booking reference and print-friendly entry pass with QR code.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

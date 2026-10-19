@@ -1,0 +1,99 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}CineBook Admin | Booking Management{% endblock %}
+{% block page_title %}Booking Records (BOOKING Table){% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <p style="margin: 0; color: var(--text-secondary);">
+        Inspect verified customer bookings and transactions written to MySQL <code>BOOKING</code>, <code>TICKET</code>, and <code>PAYMENT</code>.
+    </p>
+</div>
+
+<!-- Search & Filter Bar -->
+<form method="GET" action="{{ url_for('admin.manage_bookings') }}" class="filter-toolbar">
+    <div class="filter-group">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" class="form-control" placeholder="Search by customer name, phone, or ID..." value="{{ search_q }}">
+        </div>
+
+        <div>
+            <select name="theatre_id" class="form-control" onchange="this.form.submit();">
+                <option value="">All Theatres</option>
+                {% for t in theatres %}
+                <option value="{{ t.Theatre_Id }}" {% if request.args.get('theatre_id')|int == t.Theatre_Id %}selected{% endif %}>
+                    {{ t.Theatre_Name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if search_q or request.args.get('theatre_id') %}
+        <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-secondary">
+            Reset Filters
+        </a>
+        {% endif %}
+    </div>
+
+    <div style="font-size: 0.9rem; color: var(--text-muted);">
+        Found <strong>{{ bookings|length }}</strong> booking record(s)
+    </div>
+</form>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Ref ID</th>
+                    <th>Booking Time</th>
+                    <th>Customer</th>
+                    <th>Movie Title</th>
+                    <th>Theatre & Screen</th>
+                    <th>Show Date & Time</th>
+                    <th>Total Amount</th>
+                    <th>Payment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr>
+                    <td><strong>#{{ b.Booking_Id }}</strong></td>
+                    <td>{{ b.Booking_Date | date_fmt }}</td>
+                    <td>
+                        <div style="font-weight: 700;">{{ b.Customer_Name }}</div>
+                        <small style="color: var(--text-muted);">📞 {{ b.Phone }}</small>
+                    </td>
+                    <td style="color: var(--text-primary); font-weight: 600;">{{ b.Movie_Name }}</td>
+                    <td>
+                        <div>{{ b.Theatre_Name }}</div>
+                        <small style="color: var(--text-muted);">Screen {{ b.Screen_No }}</small>
+                    </td>
+                    <td>
+                        <div>📅 {{ b.Show_Date | date_fmt }}</div>
+                        <small style="color: var(--accent-primary);">⏰ {{ b.Show_Time | time_fmt }}</small>
+                    </td>
+                    <td style="font-weight: 800; color: var(--accent-emerald);">
+                        {{ b.Total_Amount | currency }}
+                    </td>
+                    <td><span class="badge badge-cyan">{{ b.Payment_Mode or 'UPI' }}</span></td>
+                    <td>
+                        <a href="{{ url_for('public.booking_confirmation', booking_id=b.Booking_Id) }}" target="_blank" class="btn btn-outline btn-sm">
+                            View Pass ↗
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                        No customer bookings matching the criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CineBook Admin Portal{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+    <!-- Chart.js CDN for Analytics & Visual Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- Hidden Flashed Messages for JS Toast Triggering -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message-data sr-only" data-category="{{ category }}" data-message="{{ message }}"></div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="admin-wrapper">
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-brand">
+                <span style="font-size: 1.5rem;">🎬</span>
+                <div>
+                    <h2>Cine<span style="color: var(--accent-primary);">Book</span></h2>
+                    <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--accent-primary); letter-spacing: 0.08em; font-weight: 700;">Admin Console</span>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('admin.manage_movies') }}" class="admin-nav-item {% if request.endpoint == 'admin.manage_movies' %}active{% endif %}">
+                    <span class="nav-icon">🎬</span>
+                    <span>Movies (MOVIE)</span>
+                </a>
+                <a href="{{ url_for('admin.manage_theatres') }}" class="admin-nav-item {% if request.endpoint == 'admin.manage_theatres' %}active{% endif %}">
+                    <span class="nav-icon">🏛️</span>
+                    <span>Theatres (THEATRE)</span>
+                </a>
+                <a href="{{ url_for('admin.manage_screens') }}" class="admin-nav-item {% if request.endpoint == 'admin.manage_screens' %}active{% endif %}">
+                    <span class="nav-icon">🖥️</span>
+                    <span>Screens (SCREEN)</span>
+                </a>
+                <a href="{{ url_for('admin.manage_shows') }}" class="admin-nav-item {% if request.endpoint == 'admin.manage_shows' %}active{% endif %}">
+                    <span class="nav-icon">⏰</span>
+                    <span>Showtimes (SHOW)</span>
+                </a>
+                <a href="{{ url_for('admin.manage_employees') }}" class="admin-nav-item {% if request.endpoint == 'admin.manage_employees' %}active{% endif %}">
+                    <span class="nav-icon">👥</span>
+                    <span>Staff (EMPLOYEE)</span>
+                </a>
+                <a href="{{ url_for('admin.manage_snacks') }}" class="admin-nav-item {% if request.endpoint == 'admin.manage_snacks' %}active{% endif %}">
+                    <span class="nav-icon">🍿</span>
+                    <span>Snacks (SNACK)</span>
+                </a>
+                <a href="{{ url_for('admin.manage_bookings') }}" class="admin-nav-item {% if request.endpoint == 'admin.manage_bookings' %}active{% endif %}">
+                    <span class="nav-icon">🎟️</span>
+                    <span>Bookings (BOOKING)</span>
+                </a>
+                <a href="{{ url_for('admin.analytics') }}" class="admin-nav-item {% if request.endpoint == 'admin.analytics' %}active{% endif %}">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics Reports</span>
+                </a>
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <a href="{{ url_for('public.home') }}" class="btn btn-secondary btn-sm" style="width: 100%; text-align: center;">
+                    🌐 Public Cinema Site
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="admin-main">
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button type="button" id="admin-sidebar-toggle" class="btn btn-secondary btn-sm" style="display: none;">
+                        ☰
+                    </button>
+                    <div class="admin-page-title">
+                        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div style="font-size: 0.88rem; color: var(--text-secondary);">
+                        Signed in as <strong style="color: var(--accent-primary);">{{ session.get('admin_user', 'admin') }}</strong>
+                    </div>
+                    <a href="{{ url_for('admin.logout') }}" class="btn btn-outline btn-sm">
+                        <span>🚪 Sign Out</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Admin Page Content -->
+            <main class="admin-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
